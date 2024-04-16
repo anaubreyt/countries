@@ -19,4 +19,6 @@ export type Country = {
     languages: {
       [key: string]: string,
     },
+    cca3: string,
+    borders: string[];
   };

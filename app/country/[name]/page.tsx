@@ -1,29 +1,25 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Country } from "@/app/types";
 
-async function getCountryByName(name: string): Promise<Country> {
-    const response = await fetch(`https://restcountries.com/v3.1/name/${name}?fullText=true`);
-    const country = await response.json();
-    return country[0];
-}
+import { getCountryBorderByName } from "@/app/lib/getCountryBorderByName";
+import { getCountryByName } from "@/app/lib/getCountryByName";
 
+import CountryCard from "@/app/ui/CountryCard";
+import { BackButton } from "@/app/ui/BackButton";
+  
 export default async function CountryDetail({
     params: {name}
 }: {
     params: {name :string}
 }) {
     const country = await getCountryByName(name);
-    const formatter = Intl.NumberFormat("rus", {notation: "compact"})
+    const borderCountries = await getCountryBorderByName(decodeURI(name));
+    const formatter = Intl.NumberFormat("rus", {notation: "compact"});
        return(
         <section className="flex flex-col container">
-            <h1 className="text-5xl font-bold text-center text-gray-800 mt-16">{country.translations.rus.official}</h1>
-            <Link href='/' className="flex items-center py-2 gap-1">
-                <Image src="/arrow.svg" alt="назад" width={24} height={24}/>
-                <h1>Назад</h1>
-            </Link>
-
-            <article className="flex justify-between min-w-full p-10 bg-white rounded-xl">
+            <BackButton />
+            <h1 className="text-5xl font-bold text-center text-gray-800 my-5">{country.translations.rus.official}</h1>
+            <article className="flex  md:flex-row flex-col justify-between min-w-full p-10 bg-white rounded-xl">
                 <section>
                     {
                         country.capital && (
@@ -69,7 +65,30 @@ export default async function CountryDetail({
                     }
                    
                 </section>
+            <div className="relative h-48 my-2 w-auto md:h-auto md:w-96 shadow-md md:order-last order-first">
+                <Image 
+                    src={country.flags.svg} 
+                    alt={country.flags.alt} 
+                    fill 
+                />
+            </div>
             </article>
+            {
+                borderCountries.length ? (
+                    <section>
+                        <h3 className="mt-12 text-2xl font-semibold text-gray-800">
+                            Соседние страны
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 w-full container gap-2 mt-16">
+                            {
+                                borderCountries.map((border) => (
+                                        <CountryCard key={border.name} {...border} />
+                                ))
+                            }
+                        </div>
+                    </section>
+                ) : ''
+            }
         </section>
     )
 }
